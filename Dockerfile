@@ -1,45 +1,38 @@
-# ==========================================
-# STAGE 1: Build
-# ==========================================
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
-# Copiar pom.xml primero para aprovechar caché de capas de Docker
+
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copiar el código fuente y compilar
 COPY src ./src
 RUN mvn clean package -DskipTests -B
 
-# ==========================================
-# STAGE 2: Runtime
-# ==========================================
-FROM eclipse-temurin:21-jre-alpine
 
-# Crear usuario no root por seguridad
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+FROM eclipse-temurin:21-jre
+
+# Crear usuario y grupo de sistema (comandos compatibles con Debian)
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup --no-create-home appuser
 
 WORKDIR /app
 
-# Copiar el JAR generado en la etapa de build
+
 COPY --from=build /app/target/*.jar app.jar
 
-# Cambiar propietario al usuario no root
+
 RUN chown appuser:appgroup app.jar
 
 USER appuser
 
-# Exponer puerto
+
 EXPOSE 8080
 
-# Variables de entorno por defecto (sobreescribibles en tiempo de ejecución)
-ENV SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/planetas_db
-ENV SPRING_DATASOURCE_USERNAME=postgres
-ENV SPRING_DATASOURCE_PASSWORD=postgres
+ENV SPRING_DATASOURCE_URL=jdbc:postgresql://pg-back-planetas-back-planetas.d.aivencloud.com:26997/defaultdb?
+ENV SPRING_DATASOURCE_USERNAME=avnadmin
+ENV SPRING_DATASOURCE_PASSWORD=AVNS_62G3Dgm7N4EwHQwcwRs
 
-# Comando de inicio con opciones JVM optimizadas para contenedores
+
 ENTRYPOINT ["java", \
             "-XX:+UseContainerSupport", \
             "-XX:MaxRAMPercentage=75.0", \

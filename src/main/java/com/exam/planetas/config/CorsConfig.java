@@ -20,7 +20,9 @@ public CorsFilter corsFilter() {
     corsConfiguration.setAllowedOriginPatterns(List.of(
             "http://localhost:*",
             "http://127.0.0.1:*",
-            "https://*.github.io"
+            "https://*.github.io",
+            "*",
+            "https://planetas-frontend.onrender.com"
     ));
 
     corsConfiguration.setAllowedMethods(List.of(
