@@ -2,7 +2,7 @@ name: SpringBoot_DockerImage
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   springboot_deploy:
