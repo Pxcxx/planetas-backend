@@ -1,44 +1,43 @@
-name: Backend CI
+name: SpringBoot_DockerImage
 
 on:
   push:
-    branches: [ "main", "develop" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: [ master ]
 
 jobs:
-  build:
-    name: Build and Test
+  springboot_deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout código fuente
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Configurar Java 21
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: 'maven'
+          cache: maven
 
-      - name: Cache dependencias Maven
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+      - name: Build JAR with Maven
+        run: mvn package -DskipTests --batch-mode
 
-      - name: Verificar y compilar proyecto
-        run: mvn clean verify -DskipTests -B
+      - name: Verify JAR
+        run: ls -la target/*.jar
 
-      - name: Empaquetar aplicación
-        run: mvn package -DskipTests -B
+      - name: Docker Login
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
 
-      - name: Guardar artefacto JAR
-        uses: actions/upload-artifact@v4
-        with:
-          name: planetas-app-${{ github.run_number }}
-          path: target/*.jar
-          retention-days: 14
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ secrets.DOCKER_USER }}/back_planetas:${{ github.sha }} \
+            -t ${{ secrets.DOCKER_USER }}/back_planetas:latest \
+            .
+
+      - name: Push Docker images
+        run: |
+          docker push ${{ secrets.DOCKER_USER }}/back_planetas:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_USER }}/back_planetas:latest
+
+      - name: Trigger Render Deploy
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
