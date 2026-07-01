@@ -28,7 +28,7 @@ USER appuser
 
 EXPOSE 8080
 
-ENV SPRING_DATASOURCE_URL=jdbc:postgresql://pg-back-planetas-back-planetas.d.aivencloud.com:26997/defaultdb?
+ENV SPRING_DATASOURCE_URL=jdbc:postgresql://pg-back-planetas-back-planetas.d.aivencloud.com:26997/defaultdb?sslmode=require
 ENV SPRING_DATASOURCE_USERNAME=avnadmin
 ENV SPRING_DATASOURCE_PASSWORD=AVNS_62G3Dgm7N4EwHQwcwRs
 
